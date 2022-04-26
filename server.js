@@ -33,21 +33,13 @@ const client = new tmi.Client({
 client.connect();
 
 //Message listener
-client.on('message', (channel, tags, message, self) => {
-	const isNotBot = tags.username.toLowerCase() !== process.env.TWITCH_BOT_USERNAME;
+client.on('message', (channel, userstate, message, self) => {
+    if(userstate.username === process.env.TWITCH_BOT_USERNAME || !message.startsWith('!')) return;
 
-    if ( !isNotBot ) return;
+	const args = message.slice(1).split(' ');
+	const command = args.shift().toLowerCase();
 
-    if(message[0] === '!') {
-        const [raw, command, argument] = message.match(reqexpCommand);
-
-        const { response } = commands[command] || {}; 
-
-        if(typeof response === 'function') {
-            client.say(channel, response(argument))
-        }
-        else if (typeof response === 'string') {
-            client.say(channel, response)
-        }
-    }
+	if(command === 'echo') {
+		client.say(channel, `@${userstate.username}, you said: "${args.join(' ')}"`);
+	}
 });
