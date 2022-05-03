@@ -2,6 +2,7 @@
 require('dotenv').config();
 
 const tmi = require('tmi.js');
+const blacklist = ['hello']
 
 //define commands
 const commands = {
@@ -29,7 +30,42 @@ const client = new tmi.Client({
 //Connect client
 client.connect();
 
-const blacklist = ['goodbye', 'loser']
+
+//TS Modules
+client.on('connected', (address, port) => {
+    console.log(address)
+    console.log(port)
+    //client.say(channel, "Now live!")
+})
+
+client.on('disconnected', (reason) => {
+    console.log(reason)
+    //client.say(channel, "End of stream!")
+})
+
+client.on('logon', (channel) => {
+    console.log(channel)
+})
+
+
+client.on('join', (channel, username, self) => {
+    if(!self) client.say(channel, `Welcome, ${username}!`)
+})
+
+client.on('part', (channel, username, self) => {
+    if(!self) client.say(channel, `Goodbye, ${username}!`)
+})
+
+client.on('raided', (channel, username, viewers) => {
+    client.say(channel, `${username} has raided with ${viewers}`)
+})
+
+client.on('roomstate', (channel, state) => {
+    console.log(`Joined:${channel} ${state['room-id']}`)
+})
+
+
+
 
 //Message listener
 client.on('message', (channel, userstate, message, self) => {
@@ -37,9 +73,7 @@ client.on('message', (channel, userstate, message, self) => {
     chatMod(userstate, message, channel);
     if(!message.startsWith('!')) return;
 
-    //Auto mod features to get message id's and delete them if they contain blacklisted words.
-    
-
+    //Auto mod features to get message id's and delete them if they contain blacklisted words
 	const args = message.slice(1).split(' ');
 	const command = args.shift().toLowerCase();
 
@@ -54,6 +88,8 @@ client.on('message', (channel, userstate, message, self) => {
     }
 });
 
+
+//Functions
 function chatMod(userstate, message, channel) {
     message.toLowerCase();
     //default false
